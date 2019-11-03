@@ -50,10 +50,7 @@ CONTRACT delphibackup : public contract {
         uint64_t by_name() const {return name.value;}
       };
 
-      //Holds the list of pairs
       TABLE npairs {
-        //uint64_t id;
-
         bool active = false;
         bool bounty_awarded = false;
         bool bounty_edited_by_custodians = false;
@@ -77,8 +74,6 @@ CONTRACT delphibackup : public contract {
         uint64_t quoted_precision;
 
         uint64_t primary_key() const {return name.value;}
-        //name by_name() const {return name;}
-
       };
 
       // INDEXES
@@ -86,7 +81,7 @@ CONTRACT delphibackup : public contract {
       typedef eosio::multi_index<"stats"_n, stats,
           indexed_by<"count"_n, const_mem_fun<stats, uint64_t, &stats::by_count>>> statstable;
 
-      typedef eosio::multi_index<"opairs"_n, opairs> opairstable;
+      typedef eosio::multi_index<"pairs"_n, opairs> opairstable;
       typedef eosio::multi_index<"npairs"_n, npairs> npairstable;
       typedef eosio::multi_index<"snapshot"_n, snapshot> snapshottable;
 

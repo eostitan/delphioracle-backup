@@ -2,92 +2,152 @@
 
 ACTION delphibackup::copydata() {
 
-	require_auth(_self);
+  require_auth(_self);
 
-	statstable stats(name("delphioracle"), name("delphioracle").value);
-	statstable _stats(_self, _self.value);
+  snapshottable snapshot(_self, _self.value);
+  check(snapshot.begin() == snapshot.end(), "snapshot already exists; call erasedata first");
 
-	snapshottable snapshot(_self, _self.value);
+  statstable stats(name("delphioracle"), name("delphioracle").value);
+  statstable _stats(_self, _self.value);
 
-	check(snapshot.begin() == snapshot.end(), "snapshot already exists; call erasedata first");
+  auto gitr = stats.begin();
+  while (gitr != stats.end()) {
+    _stats.emplace(_self, [&](auto& s){
+      s.owner = gitr->owner;
+      s.timestamp = gitr->timestamp;
+      s.count = gitr->count;
+      s.last_claim = gitr->last_claim;
+      s.balance = gitr->balance;
+    });
+    gitr++;
+  }
 
-	auto gitr = stats.begin();
-	while (gitr != stats.end()) {
-		_stats.emplace(_self, [&](auto& s){
-			s.owner = gitr->owner;
-			s.timestamp = gitr->timestamp;
-			s.count = gitr->count;
-			s.last_claim = gitr->last_claim;
-			s.balance = gitr->balance;
-		});
-		gitr++;
-	}
+  opairstable pairs(name("delphioracle"), name("delphioracle").value);
+  npairstable _pairs(_self, _self.value);
+  auto pitr = pairs.begin();
+  while (pitr != pairs.end()) {
+    print(pitr->name);
 
-	opairstable pairs(name("delphioracle"), name("delphioracle").value);
-	npairstable _pairs(_self, _self.value);
-	auto pitr = pairs.begin();
-	while (pitr != pairs.end()) {
-		print("pairs\n", pitr->name);
-		_pairs.emplace(_self, [&](auto& p){
-			p.id = pitr->id;
-			p.name = pitr->name;
-		});
-	
-		statstable pstats(name("delphioracle"), pitr->name.value);
-		statstable _pstats(_self, pitr->name.value);
-		auto sitr = pstats.begin();
-		while (sitr != pstats.end()) {
-			_pstats.emplace(_self, [&](auto& s){
-				s.owner = sitr->owner;
-				s.timestamp = sitr->timestamp;
-				s.count = sitr->count;
-				s.last_claim = sitr->last_claim;
-				s.balance = sitr->balance;
-			});
-			sitr++;
-		}
-		pitr++;
-	}
+    _pairs.emplace(_self, [&](auto& p) {
+      p.active = true;
+      p.bounty_awarded = true;
+      p.bounty_edited_by_custodians = true;
+      p.proposer = name("delphioracle");
+      p.name = pitr->name;
+      p.bounty_amount = asset(0, symbol("EOS", 4));
 
-	snapshot.emplace(_self, [&](auto& s) {
-		s.id = 0;
-		s.timestamp = current_time_point();
-	});
+      if( pitr->name == "eosusd"_n ) {
+        p.base_symbol =  symbol("EOS", 4);
+        p.base_type = e_asset_type::eosio_token;
+        p.base_contract = "eosio.token"_n;
+        p.quote_symbol = symbol("USD", 2);
+        p.quote_type = e_asset_type::fiat;
+        p.quote_contract = ""_n;
+        p.quoted_precision = 2;
+      } else if( pitr->name == "eosbtc"_n ) {
+        p.base_symbol =  symbol("EOS", 4);
+        p.base_type = e_asset_type::eosio_token;
+        p.base_contract = "eosio.token"_n;
+        p.quote_symbol = symbol("BTC", 8);
+        p.quote_type = e_asset_type::cryptocurrency;
+        p.quote_contract = ""_n;
+        p.quoted_precision = 8;
+      } else if( pitr->name == "btccny"_n ) {
+        p.base_symbol =  symbol("BTC", 8);
+        p.base_type = e_asset_type::cryptocurrency;
+        p.base_contract = ""_n;
+        p.quote_symbol = symbol("CNY", 2);
+        p.quote_type = e_asset_type::fiat;
+        p.quote_contract = ""_n;
+        p.quoted_precision = 2;
+      } else if( pitr->name == "btcusd"_n ) {
+        p.base_symbol =  symbol("BTC", 8);
+        p.base_type = e_asset_type::cryptocurrency;
+        p.base_contract = ""_n;
+        p.quote_symbol = symbol("USD", 2);
+        p.quote_type = e_asset_type::fiat;
+        p.quote_contract = ""_n;
+        p.quoted_precision = 2;
+      }
+    });
+
+    statstable pstats(name("delphioracle"), pitr->name.value);
+    statstable _pstats(_self, pitr->name.value);
+    auto sitr = pstats.begin();
+    while (sitr != pstats.end()) {
+      _pstats.emplace(_self, [&](auto& s){
+        s.owner = sitr->owner;
+        s.timestamp = sitr->timestamp;
+        s.count = sitr->count;
+        s.last_claim = sitr->last_claim;
+        s.balance = sitr->balance;
+      });
+      sitr++;
+    }
+    pitr++;
+  }
+
+  snapshot.emplace(_self, [&](auto& s) {
+    s.id = 0;
+    s.timestamp = current_time_point();
+  });
 
 }
 
 ACTION delphibackup::erasedata() {
 
-	require_auth(_self);
+  require_auth(_self);
 
-	statstable stats(_self, _self.value);
+  // clear stats table
+  statstable stats(_self, _self.value);
   while (stats.begin() != stats.end()) {
     auto itr = stats.end();
     itr--;
     stats.erase(itr);
   }
 
-	pairstable pairs(_self, _self.value);
-  while (pairs.begin() != pairs.end()) {
-  	auto pitr = pairs.end();
-  	pitr--;
+  // clear old format pair table
+  opairstable opairs(_self, _self.value);
+  while (opairs.begin() != opairs.end()) {
+    auto pitr = opairs.end();
+    pitr--;
 
-		statstable pstats(_self, pitr->name.value);
-		auto sitr = pstats.begin();
+    statstable pstats(_self, pitr->name.value);
+    auto sitr = pstats.begin();
 
-	  while (pstats.begin() != pstats.end()) {
-	    auto itr = pstats.end();
-	    itr--;
-	    pstats.erase(itr);
-	  }
+    while (pstats.begin() != pstats.end()) {
+      auto sitr = pstats.end();
+      sitr--;
+      pstats.erase(sitr);
+    }
 
-		pairs.erase(pitr);
-	}
+    opairs.erase(pitr);
+  }
 
-	snapshottable snapshot(_self, _self.value);
+  // clear new format pair table
+  npairstable npairs(_self, _self.value);
+  while (npairs.begin() != npairs.end()) {
+    auto pitr = npairs.end();
+    pitr--;
+
+    statstable pstats(_self, pitr->name.value);
+    auto sitr = pstats.begin();
+
+    while (pstats.begin() != pstats.end()) {
+      auto sitr = pstats.end();
+      sitr--;
+      pstats.erase(sitr);
+    }
+
+    npairs.erase(pitr);
+  }
+
+  // clear snapshot table; required for copydata
+  snapshottable snapshot(_self, _self.value);
   while (snapshot.begin() != snapshot.end()) {
-  	auto sitr = snapshot.end();
-  	sitr--;
+    auto snitr = snapshot.end();
+    snitr--;
+    snapshot.erase(snitr);
   }
 
 }
