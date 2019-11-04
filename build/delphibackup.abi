@@ -1,0 +1,186 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT ",
+    "version": "eosio::abi/1.1",
+    "types": [
+        {
+            "new_type_name": "asset_type",
+            "type": "uint16"
+        }
+    ],
+    "structs": [
+        {
+            "name": "copydata",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "erasedata",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "npairs",
+            "base": "",
+            "fields": [
+                {
+                    "name": "active",
+                    "type": "bool"
+                },
+                {
+                    "name": "bounty_awarded",
+                    "type": "bool"
+                },
+                {
+                    "name": "bounty_edited_by_custodians",
+                    "type": "bool"
+                },
+                {
+                    "name": "proposer",
+                    "type": "name"
+                },
+                {
+                    "name": "name",
+                    "type": "name"
+                },
+                {
+                    "name": "bounty_amount",
+                    "type": "asset"
+                },
+                {
+                    "name": "approving_custodians",
+                    "type": "name[]"
+                },
+                {
+                    "name": "approving_oracles",
+                    "type": "name[]"
+                },
+                {
+                    "name": "base_symbol",
+                    "type": "symbol"
+                },
+                {
+                    "name": "base_type",
+                    "type": "asset_type"
+                },
+                {
+                    "name": "base_contract",
+                    "type": "name"
+                },
+                {
+                    "name": "quote_symbol",
+                    "type": "symbol"
+                },
+                {
+                    "name": "quote_type",
+                    "type": "asset_type"
+                },
+                {
+                    "name": "quote_contract",
+                    "type": "name"
+                },
+                {
+                    "name": "quoted_precision",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "opairs",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "name",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "snapshot",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "timestamp",
+                    "type": "time_point"
+                }
+            ]
+        },
+        {
+            "name": "stats",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "timestamp",
+                    "type": "time_point"
+                },
+                {
+                    "name": "count",
+                    "type": "uint64"
+                },
+                {
+                    "name": "last_claim",
+                    "type": "time_point"
+                },
+                {
+                    "name": "balance",
+                    "type": "asset"
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "name": "copydata",
+            "type": "copydata",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "erasedata",
+            "type": "erasedata",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [
+        {
+            "name": "npairs",
+            "type": "npairs",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "pairs",
+            "type": "opairs",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "snapshot",
+            "type": "snapshot",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "stats",
+            "type": "stats",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "ricardian_clauses": [],
+    "variants": []
+}
