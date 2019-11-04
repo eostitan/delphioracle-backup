@@ -126,12 +126,12 @@ async function executeUpgrade(){
                     }
                 },
             },
-            // { // migrate data to main contract (delphioracle - migratedata)
-            //     account: process.env.MAIN_CONTRACT,
-            //     name: 'migratedata',
-            //     authorization: [MAIN_TRX_AUTH_TEMPLATE],
-            //     data: {},
-            // },
+            { // migrate data to main contract (delphioracle - migratedata)
+                account: process.env.MAIN_CONTRACT,
+                name: 'migratedata',
+                authorization: [MAIN_TRX_AUTH_TEMPLATE],
+                data: {},
+            },
         ]
     }
 
