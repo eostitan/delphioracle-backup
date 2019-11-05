@@ -76,6 +76,18 @@ CONTRACT delphibackup : public contract {
         uint64_t primary_key() const {return name.value;}
       };
 
+      TABLE datapoints {
+        uint64_t id;
+        name owner;
+        uint64_t value;
+        uint64_t median;
+        time_point timestamp;
+
+        uint64_t primary_key() const {return id;}
+        uint64_t by_timestamp() const {return timestamp.elapsed.to_seconds();}
+        uint64_t by_value() const {return value;}
+      };
+
       // INDEXES
 
       typedef eosio::multi_index<"stats"_n, stats,
@@ -84,6 +96,10 @@ CONTRACT delphibackup : public contract {
       typedef eosio::multi_index<"pairs"_n, opairs> opairstable;
       typedef eosio::multi_index<"npairs"_n, npairs> npairstable;
       typedef eosio::multi_index<"snapshot"_n, snapshot> snapshottable;
+
+      typedef eosio::multi_index<"datapoints"_n, datapoints,
+        indexed_by<"value"_n, const_mem_fun<datapoints, uint64_t, &datapoints::by_value>>, 
+        indexed_by<"timestamp"_n, const_mem_fun<datapoints, uint64_t, &datapoints::by_timestamp>>> datapointstable;
 
       // ACTIONS
 

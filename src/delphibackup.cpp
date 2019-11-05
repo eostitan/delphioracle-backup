@@ -5,7 +5,9 @@ ACTION delphibackup::copydata() {
   require_auth(_self);
 
   snapshottable snapshot(_self, _self.value);
-  check(snapshot.begin() == snapshot.end(), "snapshot already exists; call erasedata first");
+  if (snapshot.begin() != snapshot.end()) {
+    return;
+  }
 
   statstable stats(name("delphioracle"), name("delphioracle").value);
   statstable _stats(_self, _self.value);
@@ -84,6 +86,21 @@ ACTION delphibackup::copydata() {
       });
       sitr++;
     }
+
+    datapointstable datapoints(name("delphioracle"), pitr->name.value);
+    datapointstable _datapoints(_self, pitr->name.value);
+    auto ditr = datapoints.begin();
+    while (ditr != datapoints.end()) {
+      _datapoints.emplace(_self, [&](auto& s){
+        s.id = ditr->id;
+        s.owner = ditr->owner;
+        s.value = ditr->value;
+        s.median = ditr->median;
+        s.timestamp = ditr->timestamp;
+      });
+      ditr++;
+    }
+
     pitr++;
   }
 
@@ -113,8 +130,6 @@ ACTION delphibackup::erasedata() {
     pitr--;
 
     statstable pstats(_self, pitr->name.value);
-    auto sitr = pstats.begin();
-
     while (pstats.begin() != pstats.end()) {
       auto sitr = pstats.end();
       sitr--;
@@ -131,12 +146,17 @@ ACTION delphibackup::erasedata() {
     pitr--;
 
     statstable pstats(_self, pitr->name.value);
-    auto sitr = pstats.begin();
-
     while (pstats.begin() != pstats.end()) {
       auto sitr = pstats.end();
       sitr--;
       pstats.erase(sitr);
+    }
+
+    datapointstable datapoints(_self, pitr->name.value);
+    while (datapoints.begin() != datapoints.end()) {
+      auto ditr = datapoints.end();
+      ditr--;
+      datapoints.erase(ditr);
     }
 
     npairs.erase(pitr);
