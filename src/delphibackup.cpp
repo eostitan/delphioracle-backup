@@ -45,7 +45,7 @@ ACTION delphibackup::copydata() {
         p.quote_symbol = symbol("USD", 2);
         p.quote_type = e_asset_type::fiat;
         p.quote_contract = ""_n;
-        p.quoted_precision = 2;
+        p.quoted_precision = 4;
       } else if( pitr->name == "eosbtc"_n ) {
         p.base_symbol =  symbol("EOS", 4);
         p.base_type = e_asset_type::eosio_token;
@@ -61,7 +61,7 @@ ACTION delphibackup::copydata() {
         p.quote_symbol = symbol("CNY", 2);
         p.quote_type = e_asset_type::fiat;
         p.quote_contract = ""_n;
-        p.quoted_precision = 2;
+        p.quoted_precision = 4;
       } else if( pitr->name == "btcusd"_n ) {
         p.base_symbol =  symbol("BTC", 8);
         p.base_type = e_asset_type::cryptocurrency;
@@ -69,7 +69,7 @@ ACTION delphibackup::copydata() {
         p.quote_symbol = symbol("USD", 2);
         p.quote_type = e_asset_type::fiat;
         p.quote_contract = ""_n;
-        p.quoted_precision = 2;
+        p.quoted_precision = 4;
       }
     });
 
