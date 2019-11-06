@@ -4,7 +4,6 @@ var fs = require('fs');
 
 const { Api, JsonRpc, RpcError, Serialize } = require('eosjs');
 const { JsSignatureProvider } = require('eosjs/dist/eosjs-jssig');      // development only
-//const AbiProvider = require('eosjs/src/abi.abi.json');                // development only
 
 const fetch = require('node-fetch');                                    // node only; not needed in browsers
 const { TextEncoder, TextDecoder } = require('util');                   // node only; native TextEncoder/Decoder
@@ -25,6 +24,34 @@ const MAIN_TRX_AUTH_TEMPLATE = {
 const BACKUP_TRX_AUTH_TEMPLATE = {
     actor: `${process.env.BACKUP_CONTRACT}`,
     permission: `${process.env.BACKUP_PERMISSION||"active"}`,
+}
+
+async function executePrepareCopy(){
+
+    var obj = {
+        actions: [
+            { // copy data to backup contract (delphibackup - copydata)
+                account: process.env.BACKUP_CONTRACT,
+                name: 'copydata',
+                authorization: [BACKUP_TRX_AUTH_TEMPLATE],
+                data: {},
+            },
+        ]
+    }
+
+    console.log("executePrepareCopy", JSON.stringify(obj, null, 2));
+
+    const result = await api.transact(obj, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+    }).catch((err) => {
+        if (err.json) console.error(`Error [prepareCopy]: ${err.json.error.what}`, JSON.stringify(err, null, 2));
+        else console.error("Error [prepareCopy]:", JSON.stringify(err, null, 2));
+        return {error: err};
+    });
+
+    return result;
+
 }
 
 async function executeUpgrade(){
@@ -106,6 +133,37 @@ async function executeUpgrade(){
                     abi: Buffer.from(buffer.asUint8Array()).toString(`hex`),
                 },
             },
+        ]
+    }
+
+    console.log("executeUpgrade", JSON.stringify(obj, null, 2));
+
+    var result;
+
+    try {
+        result = await api.transact(obj, {
+            blocksBehind: 3,
+            expireSeconds: 30,
+        }).catch((err) => {
+            if (err.json) console.error(`Error [upgrade]: ${err.json.error.what}`, JSON.stringify(err, null, 2));
+            else console.error("Error [upgrade]:", JSON.stringify(err, null, 2));
+            return {error: err};
+        });
+    } catch (e) {
+        console.log('\nCaught exception: ' + e);
+        if (e instanceof RpcError) {
+            console.log(JSON.stringify(e.json, null, 2));
+        }
+    }
+
+    return result;
+
+}
+
+async function executeDataMigration(){
+
+    var obj = {
+        actions: [
             { // configure main contract (delphioracle - configure)
                 account: process.env.MAIN_CONTRACT,
                 name: 'configure',
@@ -135,30 +193,47 @@ async function executeUpgrade(){
         ]
     }
 
-    console.log("executeUpgrade", JSON.stringify(obj, null, 2));
+    console.log("executeDataMigration", JSON.stringify(obj, null, 2));
 
-    const result = await api.transact(obj, {
-        blocksBehind: 3,
-        expireSeconds: 30,
-    }).catch((err) => {
-        if (err.json) console.error(`Error [upgrade]: ${err.json.error.what}`, JSON.stringify(err, null, 2));
-        else console.error("Error [upgrade]:", JSON.stringify(err, null, 2));
-        return {error: err};
-    });
+    var result;
+
+    try {
+        result = await api.transact(obj, {
+            blocksBehind: 3,
+            expireSeconds: 30,
+        }).catch((err) => {
+            if (err.json) console.error(`Error [dataMigration]: ${err.json.error.what}`, JSON.stringify(err, null, 2));
+            else console.error("Error [dataMigration]:", JSON.stringify(err, null, 2));
+            return {error: err};
+        });
+    } catch (e) {
+        console.log('\nCaught exception: ' + e);
+        if (e instanceof RpcError) {
+            console.log(JSON.stringify(e.json, null, 2));
+        }
+    }
 
     return result;
 
 }
 
+async function run(migrateData){
 
-async function run(){
+    var res;
 
-    res = await executeUpgrade()
-
-    if (!res.error) {
-        console.log(JSON.stringify(res, null, 2));
+    if (!migrateData) {
+        // prepare copy on network to ensure the next step succeeds
+        await executePrepareCopy()
+        // copy data; clear main contract; upgrade main contract
+        res = await executeUpgrade()
+    } else {
+        // configure main contract; consume data from backup contract
+        res = executeDataMigration()
     }
+
+    console.log(JSON.stringify(res, null, 2));
 
 }
 
-run();
+if (process.argv[2] == "--migrate") run(true);
+else run(false);
