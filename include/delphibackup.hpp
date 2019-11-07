@@ -24,6 +24,13 @@ CONTRACT delphibackup : public contract {
 
       // TABLES
 
+      TABLE global {
+        uint64_t id;
+        uint64_t total_datapoints_count;
+        
+        uint64_t primary_key() const {return id;}
+      };
+
       TABLE snapshot {
         uint64_t id;
         time_point timestamp;
@@ -89,6 +96,8 @@ CONTRACT delphibackup : public contract {
       };
 
       // INDEXES
+
+      typedef eosio::multi_index<"global"_n, global> globaltable;
 
       typedef eosio::multi_index<"stats"_n, stats,
           indexed_by<"count"_n, const_mem_fun<stats, uint64_t, &stats::by_count>>> statstable;

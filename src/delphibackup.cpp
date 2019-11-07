@@ -9,6 +9,18 @@ ACTION delphibackup::copydata() {
     return;
   }
 
+  globaltable global(name("delphioracle"), name("delphioracle").value);
+  globaltable _global(_self, _self.value);
+
+  auto glitr = global.begin();
+  while (glitr != global.end()) {
+    _global.emplace(_self, [&](auto& s){
+      s.id = glitr->id;
+      s.total_datapoints_count = glitr->total_datapoints_count;
+    });
+    glitr++;
+  }
+
   statstable stats(name("delphioracle"), name("delphioracle").value);
   statstable _stats(_self, _self.value);
 
@@ -114,6 +126,14 @@ ACTION delphibackup::copydata() {
 ACTION delphibackup::erasedata() {
 
   require_auth(_self);
+
+  // clear global table
+  globaltable global(_self, _self.value);
+  while (global.begin() != global.end()) {
+    auto itr = global.end();
+    itr--;
+    global.erase(itr);
+  }
 
   // clear stats table
   statstable stats(_self, _self.value);
