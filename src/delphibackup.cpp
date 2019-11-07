@@ -13,13 +13,10 @@ ACTION delphibackup::copydata() {
   globaltable _global(_self, _self.value);
 
   auto glitr = global.begin();
-  while (glitr != global.end()) {
-    _global.emplace(_self, [&](auto& s){
-      s.id = glitr->id;
-      s.total_datapoints_count = glitr->total_datapoints_count;
-    });
-    glitr++;
-  }
+  _global.emplace(_self, [&](auto& s){
+    s.id = glitr->id;
+    s.total_datapoints_count = glitr->total_datapoints_count;
+  });
 
   statstable stats(name("delphioracle"), name("delphioracle").value);
   statstable _stats(_self, _self.value);
